@@ -1,0 +1,167 @@
+# Constella — the team knowledge satellite for Confluence
+# Codegeist 2026: "Build with context. Ship with confidence."
+# A Teamwork Graph native: maps people ↔ teams ↔ spaces ↔ pages, finds the
+# human behind every page, and surfaces who to ask before you write.
+modules:
+  # ---------- UI surfaces ----------
+  confluence:globalPage:
+    - key: constella-constellation-map
+      resource: main-ui
+      resolver:
+        function: resolver
+      render: native
+      title: Constella
+
+  confluence:contentBylineItem:
+    - key: constella-byline
+      resource: main-ui
+      resolver:
+        function: resolver
+      render: native
+      title: Constella — page people
+      icon: resource:static-assets;icons/star.svg
+
+  # ---------- Rovo agent ----------
+  rovo:agent:
+    - key: constella-guide
+      name: Constella Guide
+      description: >-
+        Team knowledge guide. Ask me who owns a page, who contributed recently,
+        which teams live in a space, or who you should ask before writing.
+      prompt: resource:agent-prompts;prompts/guide-agent-prompt.txt
+      conversationStarters:
+        - Who owns the page "Onboarding checklist"?
+        - Which teams work in the Marketing space?
+        - Who contributed to the Q3 launch plan?
+        - Who should I ask about benefits policy?
+      actions:
+        - get-page-people
+        - get-space-teams
+        - get-user-teams
+        - get-user-recent-work
+        - who-to-ask
+      followUpPrompt: >-
+        Offer one concrete next step: open the page, message the owner, or
+        explore the team's spaces.
+
+  # ---------- MCP server ----------
+  rovo:mcp:
+    - key: constella-mcp
+      name: Constella tools
+      tools:
+        - get-page-people
+        - get-space-teams
+        - get-user-teams
+        - get-user-recent-work
+        - who-to-ask
+
+  # ---------- Actions ----------
+  action:
+    - key: get-page-people
+      name: Get page people
+      function: act-get-page-people
+      actionVerb: GET
+      description: >-
+        People behind a Confluence page: creator, owners, and recent
+        contributors, resolved from the Teamwork Graph.
+      inputs:
+        contentId:
+          title: Page content ID
+          type: string
+          required: true
+          description: Confluence content id of the page.
+
+    - key: get-space-teams
+      name: Get teams in a space
+      function: act-get-space-teams
+      actionVerb: GET
+      description: >-
+        Teams linked to a Confluence space (or Jira project space), plus each
+        team's members, resolved from the Teamwork Graph.
+      inputs:
+        spaceAri:
+          title: Space ARI
+          type: string
+          required: true
+          description: ARI of the Confluence space or Jira project space, e.g. ari:cloud:confluence::space/123.
+
+    - key: get-user-teams
+      name: Get teams of a user
+      function: act-get-user-teams
+      actionVerb: GET
+      description: >-
+        Teams a user belongs to (most recently updated first), plus each
+        team's linked spaces, from the Teamwork Graph.
+      inputs:
+        userId:
+          title: User ARI
+          type: string
+          required: true
+          description: ARI of the user, e.g. ari:cloud:identity::user/712020:abc.
+
+    - key: get-user-recent-work
+      name: Get a user's recent work
+      function: act-get-user-recent-work
+      actionVerb: GET
+      description: >-
+        Work items and pages a user recently viewed or edited, across tools,
+        from the Teamwork Graph — useful to understand what someone is working
+        on before you ping them.
+      inputs:
+        userId:
+          title: User ARI
+          type: string
+          required: true
+          description: ARI of the user.
+
+    - key: who-to-ask
+      name: Who to ask about a topic
+      function: act-who-to-ask
+      actionVerb: GET
+      description: >-
+        Given a topic or page title, find the top people to ask: search pages
+        by title, then rank page owners and recent contributors by activity.
+      inputs:
+        topic:
+          title: Topic or page title
+          type: string
+          required: true
+          description: A topic, keyword, or page title like "onboarding" or "Q3 launch plan".
+
+  # ---------- Backend functions ----------
+  function:
+    - key: resolver
+      handler: index.handler
+    - key: act-get-page-people
+      handler: index.actGetPagePeople
+    - key: act-get-space-teams
+      handler: index.actGetSpaceTeams
+    - key: act-get-user-teams
+      handler: index.actGetUserTeams
+    - key: act-get-user-recent-work
+      handler: index.actGetUserRecentWork
+    - key: act-who-to-ask
+      handler: index.actWhoToAsk
+
+resources:
+  - key: main-ui
+    path: src/frontend
+  - key: static-assets
+    path: assets
+  - key: agent-prompts
+    path: prompts
+
+permissions:
+  scopes:
+    - read:page:confluence
+    - read:space:confluence
+    - read:graph:user:atlassian
+    - read:graph:team:atlassian
+    - read:graph:page:confluence
+    - read:graph:space:confluence
+    - read:graph:issue:jira
+
+app:
+  runtime:
+    name: nodejs24.x
+  id: ari:cloud:ecosystem::app/REPLACE_WITH_YOUR_APP_ID
