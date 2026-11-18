@@ -1,12 +1,13 @@
 # Constella — demo video script (target: 2:45, hard cap 5:00)
 
 Record from the judge-account site (doubles as install-flow proof).
-1080p, browser zoom ~110%, site seeded with ≥2 teams, linked spaces,
-pages with distinct owners/editors.
+1080p, browser zoom ~110%. If the site has no teams/content yet, START with
+"Generate demo content" — it seeds a space with three pages and makes the
+graph visibly the data source within about a minute.
 
 | Time | Section | Screen | Narration (say this) |
 |---|---|---|---|
-| 0:00 | Hook | Constellation Map with teams visible | "Every company has two org charts: the reporting line, and the real one — the people who actually wrote the pages. This is Constella: the team knowledge satellite that maps the second one, live from the Atlassian Teamwork Graph." |
+| 0:00 | Hook | Constellation Map with teams visible (on an empty site: click "Generate demo content" first, then cut to the populated map) | "Every company has two org charts: the reporting line, and the real one — the people who actually wrote the pages. This is Constella: the team knowledge satellite that maps the second one, live from the Atlassian Teamwork Graph. On a brand-new site, one click seeds demo content so the graph has something to say." |
 | 0:20 | The map | Drill into a team: members + linked spaces | "Your teams, their members, and the Jira and Confluence spaces each team actually lives in — resolved from the graph, not from a sync job or a spreadsheet." |
 | 0:45 | Page people | Open a page, hover the byline item | "On any page, the byline answers the question you actually have: who created this, who owns it, who touched it last. Not just the last editor — the owners." |
 | 1:10 | Who to ask | Type "onboarding" in Who should I ask? | "Type a topic and Constella ranks the people to consult — owners weighted above contributors, aggregated across every matching page." |
