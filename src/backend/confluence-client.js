@@ -16,7 +16,7 @@ export async function searchPages(query, limit = 10) {
   const cql = `type = page AND (title ~ "${escapeCql(trimmed)}" OR text ~ "${escapeCql(trimmed)}") ORDER BY lastmodified DESC`;
   try {
     const r = await api.asUser().requestConfluence(
-      route`/wiki/rest/api/search?cql=${cql}&limit=${limit}`
+      route`/wiki/rest/api/search?${new URLSearchParams({cql, limit})}`
     );
     if (r.status === 200) {
       const json = await r.json();

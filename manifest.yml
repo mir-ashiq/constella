@@ -7,17 +7,13 @@ modules:
   confluence:globalPage:
     - key: constella-constellation-map
       resource: main-ui
-      resolver:
-        function: resolver
+      route: constellation-map
       render: native
       title: Constella
 
   confluence:contentBylineItem:
     - key: constella-byline
-      resource: main-ui
-      resolver:
-        function: resolver
-      render: native
+      resource: byline-ui
       title: Constella — page people
       icon: resource:static-assets;icons/star.svg
 
@@ -28,7 +24,7 @@ modules:
       description: >-
         Team knowledge guide. Ask me who owns a page, who contributed recently,
         which teams live in a space, or who you should ask before writing.
-      prompt: resource:agent-prompts;prompts/guide-agent-prompt.txt
+      prompt: resource:agent-prompts;guide-agent-prompt.txt
       conversationStarters:
         - Who owns the page "Onboarding checklist"?
         - Which teams work in the Marketing space?
@@ -101,7 +97,7 @@ modules:
 
     - key: get-user-recent-work
       name: Get a user's recent work
-      function: act-get-user-recent-work
+      function: act-get-user-work
       actionVerb: GET
       description: >-
         Work items and pages a user recently viewed or edited, across tools,
@@ -138,14 +134,16 @@ modules:
       handler: index.actGetSpaceTeams
     - key: act-get-user-teams
       handler: index.actGetUserTeams
-    - key: act-get-user-recent-work
+    - key: act-get-user-work
       handler: index.actGetUserRecentWork
     - key: act-who-to-ask
       handler: index.actWhoToAsk
 
 resources:
   - key: main-ui
-    path: src/frontend
+    path: src/frontend/index.jsx
+  - key: byline-ui
+    path: src/frontend/byline
   - key: static-assets
     path: assets
   - key: agent-prompts
@@ -154,6 +152,7 @@ resources:
 permissions:
   scopes:
     - read:page:confluence
+    - search:confluence
     - read:space:confluence
     - read:graph:user:atlassian
     - read:graph:team:atlassian
@@ -164,4 +163,4 @@ permissions:
 app:
   runtime:
     name: nodejs24.x
-  id: ari:cloud:ecosystem::app/REPLACE_WITH_YOUR_APP_ID
+  id: ari:cloud:ecosystem::app/122453de-58bb-438c-b4a8-a03ff9db75f7
