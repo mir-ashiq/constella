@@ -66,6 +66,6 @@ React (UI Kit), Node.js
 - [x] Category: Apps for Business Teams
 - [x] Bonus targets: Best apps with Teamwork Graph integration; Best Marketplace published app
 - [x] Install link + test instructions (README + DEPLOY notes in repo)
-- [ ] GitHub repo created + pushed (setup: GITHUB-SETUP.md; URL: __________)
+- [x] GitHub repo created + pushed: https://github.com/mir-ashiq/constella
 - [ ] Demo video < 5 min (script in VIDEO-SCRIPT.md: map → byline → who-to-ask → agent → MCP)
 - [x] Marketplace review-ticket link (start the listing in week 2; link the ticket)
