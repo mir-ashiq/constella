@@ -87,10 +87,24 @@ function ConstellationMap() {
   const [topic, setTopic] = useState('');
   const [who, setWho] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [seedMsg, setSeedMsg] = useState(null);
 
   useEffect(() => {
     invoke('getMyTeams').then(setMyTeams);
   }, []);
+
+  const seedDemo = async () => {
+    setSeeding(true); setSeedMsg(null);
+    try {
+      const r = await invoke('seedDemo');
+      if (r.error) setSeedMsg(`Seeding failed: ${r.error}`);
+      else if (r.already) setSeedMsg('Demo space already exists — search for “onboarding” below.');
+      else setSeedMsg(`Created ${r.pageCount} demo pages in the “Constella Demo” space. ${r.note || ''}`);
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const search = async () => {
     setBusy(true);
@@ -114,6 +128,16 @@ function ConstellationMap() {
       {myTeams?.teams && !myTeams.teams.length && (
         <SectionMessage appearance="information" title="No teams found">
           <Text as="p">You don't belong to any Atlassian teams yet. Create one in Team directory, reload this page, and the constellation will appear.</Text>
+          <Text as="p">On a fresh site with no content yet, you can also seed a demo space with three pages (onboarding, launch plan, runbook) to try search and the byline:</Text>
+          <Button appearance="primary" spacing="compact" isDisabled={seeding} onClick={seedDemo}>
+            {seeding ? 'Seeding demo content…' : 'Generate demo content'}
+          </Button>
+          {seedMsg && <Text as="p" size="small">{seedMsg}</Text>}
+        </SectionMessage>
+      )}
+      {myTeams?.teams && myTeams.teams.length > 0 && seedMsg && (
+        <SectionMessage appearance="information" title="Demo content">
+          <Text as="p">{seedMsg}</Text>
         </SectionMessage>
       )}
 

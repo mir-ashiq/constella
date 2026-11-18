@@ -154,6 +154,9 @@ permissions:
     - read:page:confluence
     - search:confluence
     - read:space:confluence
+    # demo-content seeder: create the CONSTELLADEMO space + pages on empty sites
+    - write:page:confluence
+    - write:space:confluence
     - read:graph:user:atlassian
     - read:graph:team:atlassian
     - read:graph:page:confluence

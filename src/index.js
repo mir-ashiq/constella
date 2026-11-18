@@ -6,11 +6,16 @@ import {
   userTeams, teamMembers, teamSpaces, spaceTeams, pagePeople, userRecentWork,
 } from './backend/twg-client';
 import { searchPages } from './backend/confluence-client';
+import { seedDemoData } from './backend/demo-seeder';
 
 // ---------------------------------------------------------------------------
 // Resolver (frontend bridge) — request.context carries accountId per call
 // ---------------------------------------------------------------------------
 const resolver = new Resolver();
+
+// Empty-site rescue: one click seeds a demo space + 3 pages so the
+// constellation, search and byline have graph data to work with.
+resolver.define('seedDemo', async () => seedDemoData());
 
 resolver.define('getMyTeams', async (req) => {
   const ari = accountIdToAri(req?.context?.accountId);

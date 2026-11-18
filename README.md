@@ -26,6 +26,16 @@ data through curated Teamwork Graph queries (`atlassianUserInTeams`,
 `atlassianUserAssignedJiraWorkItems`) — no REST scraping, no sync jobs, no
 external database. Remove the graph and the app has nothing to show.
 
+## Judge quick path (fresh site, 60 seconds)
+
+On a site with no Confluence content, the constellation map offers
+**Generate demo content**: one click creates the `CONSTELLADEMO` space with
+three pages (onboarding guide, launch plan, incident runbook). Confluence
+indexes them into the Teamwork Graph within about a minute — then the
+constellation, the "who to ask" search and the byline chip all have real
+graph data to resolve. If your account has no team memberships yet, create
+one in Team directory to see the team view.
+
 ## Quick start
 
 ```bash
