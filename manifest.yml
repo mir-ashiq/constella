@@ -154,20 +154,21 @@ resources:
 
 permissions:
   scopes:
-    # Teamwork Graph curated queries (the app is nothing without them)
-    - read:teamwork-graph:confluence
-    - read:teamwork-graph:jira
+    # Teamwork Graph curated queries (the app is nothing without them).
+    # Scope names per developer.atlassian.com/platform/teamwork-graph/scopes/
+    # (read:graph:<object>:<product> — one per object type traversed).
+    - read:graph:user:atlassian
+    - read:graph:team:atlassian
+    - read:graph:page:confluence
+    - read:graph:space:confluence
+    - read:graph:issue:jira
+    - read:graph:project:jira
     - read:page:confluence
     - search:confluence
     - read:space:confluence
     # demo-content seeder: create the CONSTELLADEMO space + pages on empty sites
     - write:page:confluence
     - write:space:confluence
-    - read:graph:user:atlassian
-    - read:graph:team:atlassian
-    - read:graph:page:confluence
-    - read:graph:space:confluence
-    - read:graph:issue:jira
 
 app:
   runtime:
