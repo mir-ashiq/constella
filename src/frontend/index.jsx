@@ -7,7 +7,7 @@
 import React, { useEffect, useState } from 'react';
 import ForgeReconciler, {
   Text, Heading, Box, Stack, Inline, Button, Lozenge, SectionMessage, Spinner,
-  useProductContext,
+  Textfield, Link, useProductContext,
 } from '@forge/react';
 import { invoke } from '@forge/bridge';
 
@@ -75,7 +75,7 @@ function TeamDetail({ team, onBack }) {
         {detail.spaces.map((s) => (
           <Lozenge key={s.ari}>{s.spaceType === 'confluence' ? '📄' : '🧭'} {s.title}</Lozenge>
         ))}
-        {!detail.spaces.length && <Text size="small">No linked spaces.</Text>}
+        {!detail.spaces.length && <Text size="small">No linked spaces. Link one in the space's settings → Connect a team to see it here.</Text>}
       </Inline>
     </Stack>
   );
@@ -100,7 +100,7 @@ function ConstellationMap() {
       const r = await invoke('seedDemo');
       if (r.error) setSeedMsg(`Seeding failed: ${r.error}`);
       else if (r.already) setSeedMsg('Demo space already exists — search for “onboarding” below.');
-      else setSeedMsg(`Created ${r.pageCount} demo pages in the “Constella Demo” space. ${r.note || ''}`);
+      else setSeedMsg(`Created ${r.pageCount} demo pages in the “Constella Demo” space: ${(r.pages || []).map((p) => p.title).join(' · ')}. ${r.note || ''}`);
     } finally {
       setSeeding(false);
     }
@@ -122,7 +122,8 @@ function ConstellationMap() {
       {!myTeams && <Spinner label="Resolving your teams from the graph…" />}
       {myTeams?.error && (
         <SectionMessage appearance="warning" title="Teamwork Graph unavailable">
-          <Text as="p">{String(myTeams.error)} — your site admin may need to grant the graph scopes during install.</Text>
+          <Text as="p">{String(myTeams.error)}</Text>
+          <Text as="p">This usually means the Teamwork Graph scopes (read:teamwork-graph:confluence / :jira) were not granted at install time. Reinstall the app and approve all requested permissions, then reload this page.</Text>
         </SectionMessage>
       )}
       {myTeams?.teams && !myTeams.teams.length && (
@@ -178,11 +179,10 @@ function ConstellationMap() {
 function TextFieldValue({ topic, setTopic, onSearch, busy }) {
   return (
     <Inline space="space.100" blockAlign="center">
-      <input
+      <Textfield
         value={topic}
         onChange={(e) => setTopic(e.target.value)}
         placeholder="e.g. onboarding, Q3 launch plan"
-        style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid #dfe1e6', minWidth: '260px' }}
       />
       <Button appearance="primary" isDisabled={busy || !topic.trim()} onClick={onSearch}>
         {busy ? 'Searching…' : 'Who to ask'}

@@ -13,7 +13,10 @@ import api, { route } from '@forge/api';
 export async function searchPages(query, limit = 10) {
   const trimmed = String(query || '').trim();
   if (!trimmed) return [];
-  const cql = `type = page AND (title ~ "${escapeCql(trimmed)}" OR text ~ "${escapeCql(trimmed)}") ORDER BY lastmodified DESC`;
+  // Phrase-quote the whole query: single words like "and" are CQL reserved
+  // words and break unquoted queries; a phrase also matches multi-word topics.
+  const phrase = escapeCql(trimmed);
+  const cql = `type = page AND (title ~ "${phrase}" OR text ~ "${phrase}") ORDER BY lastmodified DESC`;
   try {
     const r = await api.asUser().requestConfluence(
       route`/wiki/rest/api/search?${new URLSearchParams({cql, limit})}`

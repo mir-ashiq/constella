@@ -7,6 +7,15 @@ so you always know who is behind the knowledge, and who to ask before you write.
 > Every company has two org charts: the reporting line and the real one — the
 > people who actually wrote the pages. Constella maps the second one.
 
+## Judge quick path (fresh site, 60 seconds)
+
+> **Install (approve ALL requested scopes — the Teamwork Graph ones are the
+> app's lifeblood) → Confluence → Apps → Constella → "Generate demo content".**
+> The seeder creates the `CONSTELLADEMO` space with 4 pages (onboarding, HR
+> policy, launch plan, incident runbook) and sets you as their owner. Give the
+> graph ~a minute to index, reload, then try "Who should I ask? → onboarding"
+> and open any demo page's byline chip.
+
 ## What it does
 
 | Surface | Module | What the user gets |
@@ -26,15 +35,22 @@ data through curated Teamwork Graph queries (`atlassianUserInTeams`,
 `atlassianUserAssignedJiraWorkItems`) — no REST scraping, no sync jobs, no
 external database. Remove the graph and the app has nothing to show.
 
-## Judge quick path (fresh site, 60 seconds)
 
-On a site with no Confluence content, the constellation map offers
-**Generate demo content**: one click creates the `CONSTELLADEMO` space with
-three pages (onboarding guide, launch plan, incident runbook). Confluence
-indexes them into the Teamwork Graph within about a minute — then the
-constellation, the "who to ask" search and the byline chip all have real
-graph data to resolve. If your account has no team memberships yet, create
-one in Team directory to see the team view.
+## Architecture
+
+```mermaid
+flowchart LR
+  M[confluence:globalPage<br/>Constellation Map] --> R[resolver]
+  B[contentBylineItem<br/>Page People] --> R
+  A[rovo:agent] --> ACT[5 actions]
+  MCP[rovo:mcp server] --> ACT
+  R --> Q[who-to-ask ranking<br/>owners 3 · creators 2 · contributors 1]
+  R --> TWG[Teamwork Graph<br/>curated GraphQL]
+  ACT --> TWG
+  Q --> C[(Confluence CQL search)]
+  SEED[demo seeder] --> C
+  TWG --> K[(graph: teams, members,<br/>spaces, page people)]
+```
 
 ## Quick start
 

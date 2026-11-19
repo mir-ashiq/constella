@@ -131,8 +131,13 @@ export async function whoToAsk(topic) {
   const pages = await searchPages(topic, 10);
   if (!pages.length) return { people: [] };
   const people = new Map();
-  for (const p of pages.slice(0, 5)) {
-    const pp = await pagePeople(p.contentId);
+  // Resolve the top 5 pages' people in parallel — the graph is fast enough
+  // for 5 concurrent curated queries and the UI feels instant.
+  const topPages = pages.slice(0, 5);
+  const peopleByPage = await Promise.all(topPages.map((p) => pagePeople(p.contentId)));
+  for (let i = 0; i < topPages.length; i++) {
+    const p = topPages[i];
+    const pp = peopleByPage[i];
     if (pp.error) continue;
     const add = (u, reason, weight) => {
       if (!u) return;

@@ -78,4 +78,20 @@ describe('whoToAsk ranking', () => {
     expect(r.people.length).toBe(1);
     expect(r.people[0].displayName).toBe('Amy Chen');
   });
+
+  it('caps the parallel fan-out at 5 pages', async () => {
+    const many = Array.from({ length: 9 }, (_, i) => ({ contentId: String(200 + i), title: `P${i}`, spaceKey: 'HR' }));
+    searchPages.mockResolvedValue(many);
+    pagePeople.mockResolvedValue(pp(PRIYA, [PRIYA], []));
+    await whoToAsk('topic');
+    expect(pagePeople).toHaveBeenCalledTimes(5);
+  });
+
+  it('returns reasons citing page titles and roles', async () => {
+    searchPages.mockResolvedValue([PAGES[0]]);
+    pagePeople.mockResolvedValueOnce(pp(PRIYA, [PRIYA], [DIEGO]));
+    const r = await whoToAsk('onboarding');
+    expect(r.people[0].reason).toContain('Onboarding checklist');
+    expect(r.people[0].reason).toContain('owner');
+  });
 });

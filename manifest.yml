@@ -151,6 +151,9 @@ resources:
 
 permissions:
   scopes:
+    # Teamwork Graph curated queries (the app is nothing without them)
+    - read:teamwork-graph:confluence
+    - read:teamwork-graph:jira
     - read:page:confluence
     - search:confluence
     - read:space:confluence

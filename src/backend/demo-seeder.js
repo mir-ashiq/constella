@@ -31,6 +31,24 @@ async function cpost(url, payload) {
   }
 }
 
+/** PUT JSON via asApp; returns parsed body or {error}. */
+async function cput(url, payload) {
+  try {
+    const res = await api.asApp().requestConfluence(route`${url}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const text = await res.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+    if (!res.ok) return { error: `Confluence responded ${res.status}: ${(text || '').slice(0, 200)}` };
+    return data || {};
+  } catch (e) {
+    return { error: String(e && e.message ? e.message : e) };
+  }
+}
+
 async function cget(url) {
   try {
     const res = await api.asApp().requestConfluence(route`${url}`);
@@ -77,6 +95,15 @@ function pageBody(blocks) {
 
 const DEMO_PAGES = [
   {
+    title: 'Remote work policy — HR',
+    intro: 'Who to ask about working remotely: eligibility, equipment, and the approval flow.',
+    sections: [
+      { heading: 'Eligibility', text: 'All full-time employees after 90 days; contractors follow their agency terms.' },
+      { heading: 'Equipment', text: 'Laptops ship from the IT vendor within 5 business days of approval; monitors are self-serve.' },
+      { heading: 'Approval', text: 'Manager approves in the HR portal; HR keeps this page as the source of truth.' },
+    ],
+  },
+  {
     title: 'Onboarding guide for new engineers',
     intro: 'Everything a new engineer needs in their first two weeks: accounts, access, rituals and first PR.',
     sections: [
@@ -121,15 +148,33 @@ export async function seedDemoData() {
   if (space.error) return space;
 
   const created = [];
+  const pageMeta = [];
   for (const spec of DEMO_PAGES) {
     const page = await cpost('/wiki/api/v2/pages', pageBody(spec));
-    if (!page.error && page.id) created.push(page.id);
+    if (!page.error && page.id) {
+      created.push(page.id);
+      pageMeta.push({ id: page.id, title: spec.title });
+      // Make the installing user the page OWNER (v2 create does not set
+      // owners): the byline chip and who-to-ask ranking then have real
+      // owner data the moment the graph indexes the page.
+      if (me) {
+        await cput(`/wiki/api/v2/pages/${page.id}`, {
+          id: page.id,
+          status: 'current',
+          title: spec.title,
+          body: page.body,
+          version: { number: 1 },
+          owners: [{ accountId: me }],
+        });
+      }
+    }
   }
 
   return {
     created: true,
     spaceKey: SPACE_KEY,
     pageCount: created.length,
+    pages: pageMeta,
     note: 'Confluence indexes new pages into the Teamwork Graph within about a minute; reload afterwards.',
   };
 }
