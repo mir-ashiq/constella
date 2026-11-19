@@ -79,14 +79,17 @@ Then:
 src/backend/twg-client.js        curated TWG GraphQL queries → plain objects
 src/backend/confluence-client.js CQL page search (who-to-ask entry point)
 src/index.js                     resolver + 5 actions + whoToAsk ranking
-src/frontend/index.jsx           Constellation Map + Page People (one resource)
+src/frontend/index.jsx           Constellation Map (global page)
+src/frontend/byline.jsx          Page People byline chip (own resource)
 prompts/guide-agent-prompt.txt   agent system prompt (read-only boundaries)
 tests/who-to-ask.test.js         ranking logic: weights, aggregation, fallbacks
+tests/demo-seeder.test.js        v2 API shapes: spaceId, ownerId, versions
 ```
 
 **Design principles**
 - *Graph-native*: data comes from TWG curated queries, not REST scraping.
-- *Read-only by design*: no write scopes at all — nothing to abuse.
+- *Read-only core*: all five actions are GET; the only write scopes belong
+  to the one-click demo seeder, which creates a clearly-labeled demo space.
 - *Graceful degradation*: every wrapper returns `[]` on failure, with reasons
   surfaced in the UI.
 - *Judge-installable*: `forge deploy` + install link, zero external services.
@@ -94,8 +97,9 @@ tests/who-to-ask.test.js         ranking logic: weights, aggregation, fallbacks
 ## Tests
 
 ```bash
-npm test   # vitest — who-to-ask ranking: owner/creator/contributor weights,
-           # cross-page aggregation, empty results, error fallbacks
+npm test   # vitest, 9 tests — who-to-ask ranking (owner/creator/contributor
+           # weights, cross-page aggregation, empty results, error fallbacks)
+           # + demo-seeder v2 shapes (spaceId, ownerId, version handling)
 ```
 
 ## License

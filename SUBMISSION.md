@@ -16,7 +16,7 @@ Every newcomer asks the same question: "Who do I ask about X?" The answer lives 
 - **Constella Guide agent** (rovo:agent): ask "who owns the onboarding checklist?" or "which teams work in Marketing?" in Rovo chat.
 - **Who to ask**: type a topic; Constella searches pages and ranks the people to consult (owners weighted above contributors).
 - **MCP server** (rovo:mcp): all 5 tools exposed for your own custom agents.
-- **One-click demo content**: on a fresh site with no Confluence content, the map offers "Generate demo content" — it seeds a space with three realistic pages (onboarding guide, launch plan, incident runbook) so the graph, the search and the byline all have something real to resolve within about a minute.
+- **One-click demo content**: on a fresh site with no Confluence content, the map offers "Generate demo content" — it seeds a space with four realistic pages (remote work policy, onboarding guide, Q3 launch plan, incident runbook) and sets the installing user as their owner, so the graph, the search and the byline all have something real to resolve within about a minute.
 
 ## How I built it
 Forge (UI Kit), curated Teamwork Graph GraphQL queries (atlassianUserInTeams, atlassianTeamMembers, spacesByAtlassianTeam, atlassianTeamsBySpace, confluencePageCreator/Owners/Contributors), Confluence CQL search, Rovo agent + MCP, and the v2 content API for the demo seeder behind write scopes reserved for that path. A pure, tested who-to-ask ranking engine; every TWG wrapper degrades gracefully to [] with the reason surfaced in the UI, so the app never breaks on partial graph data.
