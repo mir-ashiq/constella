@@ -59,13 +59,12 @@ async function cget(url) {
   }
 }
 
-function pageBody(blocks) {
+function pageBody(blocks, spaceId) {
+  // v2 create shape: spaceId (not space key), no type/status; version is
+  // assigned by the server on create and required on update.
   return {
-    version: { number: 1 },
+    spaceId,
     title: blocks.title,
-    type: 'page',
-    status: 'current',
-    space: { key: SPACE_KEY },
     body: {
       representation: 'atlas_doc_format',
       value: JSON.stringify({
@@ -149,22 +148,26 @@ export async function seedDemoData() {
 
   const created = [];
   const pageMeta = [];
+  const spaceId = space.id;
   for (const spec of DEMO_PAGES) {
-    const page = await cpost('/wiki/api/v2/pages', pageBody(spec));
+    const page = await cpost('/wiki/api/v2/pages', pageBody(spec, spaceId));
     if (!page.error && page.id) {
       created.push(page.id);
       pageMeta.push({ id: page.id, title: spec.title });
       // Make the installing user the page OWNER (v2 create does not set
       // owners): the byline chip and who-to-ask ranking then have real
-      // owner data the moment the graph indexes the page.
+      // owner data the moment the graph indexes the page. The update must
+      // carry the CURRENT version from the create response, or Confluence
+      // answers 409.
+      const currentVersion = page.version && page.version.number ? page.version.number : 1;
       if (me) {
         await cput(`/wiki/api/v2/pages/${page.id}`, {
           id: page.id,
-          status: 'current',
+          status: page.status || 'current',
           title: spec.title,
           body: page.body,
-          version: { number: 1 },
-          owners: [{ accountId: me }],
+          version: { number: currentVersion },
+          ownerId: me,
         });
       }
     }

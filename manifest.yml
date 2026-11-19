@@ -14,6 +14,9 @@ modules:
   confluence:contentBylineItem:
     - key: constella-byline
       resource: byline-ui
+      render: native
+      resolver:
+        function: resolver
       title: Constella — page people
       icon: resource:static-assets;icons/star.svg
 
@@ -143,7 +146,7 @@ resources:
   - key: main-ui
     path: src/frontend/index.jsx
   - key: byline-ui
-    path: src/frontend/byline
+    path: src/frontend/byline.jsx
   - key: static-assets
     path: assets
   - key: agent-prompts

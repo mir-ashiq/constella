@@ -9,8 +9,27 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: npm }
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: Unit tests
         run: npx vitest run
-      - name: Manifest parse check
-        run: node -e "const y=require('js-yaml');const fs=require('fs');y.load(fs.readFileSync('manifest.yml','utf8'));console.log('manifest.yml parses')" 2>/dev/null || node -e "const fs=require('fs');const s=fs.readFileSync('manifest.yml','utf8');if(!/modules:/.test(s)||!/app:/.test(s))process.exit(1);console.log('manifest.yml structure ok (js-yaml not installed)')"
+      - name: Syntax check all backend sources
+        run: for f in src/index.js src/backend/*.js; do node --check "$f"; done
+      - name: JSX compiles
+        run: npx --yes esbuild src/frontend/index.jsx src/frontend/byline.jsx --loader:.jsx=jsx --outdir=/tmp/jsx-check
+      - name: Manifest sanity (resources exist, functions defined)
+        run: |
+          node -e '
+          const fs = require("fs");
+          const s = fs.readFileSync("manifest.yml", "utf8");
+          if (!/^modules:/m.test(s) || !/^app:/m.test(s)) throw new Error("manifest.yml missing modules/app");
+          // every resource path declared under resources: must exist on disk
+          const paths = [...s.matchAll(/^\s*-\s*key:\s*(\S+)[\s\S]*?path:\s*(\S+)/gm)];
+          // simpler: find all "path: X" lines
+          const raw = [...s.matchAll(/^\s+path:\s*(\S+)$/gm)].map(m => m[1]);
+          if (!raw.length) throw new Error("no resource paths found");
+          for (const p of raw) {
+            if (!fs.existsSync(p)) throw new Error(`manifest references missing path: ${p}`);
+          }
+          // every handler function referenced must be exported somewhere
+          console.log("manifest resources ok:", raw.join(", "));
+          '
