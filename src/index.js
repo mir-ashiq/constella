@@ -43,14 +43,14 @@ resolver.define('getSpaceTeams', async ({ payload }) => {
   return { spaceAri, teams: teams.error ? [] : teams };
 });
 
-resolver.define('getPagePeople', async ({ payload }) => {
+resolver.define('getPagePeople', async ({ payload, context }) => {
   const contentId = String(payload.contentId || '');
   if (!contentId) return { error: 'No page specified.' };
-  return pagePeople(contentId);
+  return pagePeople(contentId, context && context.cloudId);
 });
 
-resolver.define('whoToAsk', async ({ payload }) => {
-  return whoToAsk(String(payload.topic || ''));
+resolver.define('whoToAsk', async (req) => {
+  return whoToAsk(String((req.payload && req.payload.topic) || ''), req.context && req.context.cloudId);
 });
 
 export const handler = resolver.getDefinitions();
@@ -127,14 +127,14 @@ export async function actWhoToAsk(payload) {
 // ---------------------------------------------------------------------------
 // Core: who-to-ask ranking (pure, testable)
 // ---------------------------------------------------------------------------
-export async function whoToAsk(topic) {
+export async function whoToAsk(topic, cloudId) {
   const pages = await searchPages(topic, 10);
   if (!pages.length) return { people: [] };
   const people = new Map();
   // Resolve the top 5 pages' people in parallel — the graph is fast enough
   // for 5 concurrent curated queries and the UI feels instant.
   const topPages = pages.slice(0, 5);
-  const peopleByPage = await Promise.all(topPages.map((p) => pagePeople(p.contentId)));
+  const peopleByPage = await Promise.all(topPages.map((p) => pagePeople(p.contentId, cloudId)));
   for (let i = 0; i < topPages.length; i++) {
     const p = topPages[i];
     const pp = peopleByPage[i];

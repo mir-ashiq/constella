@@ -9,6 +9,8 @@ modules:
       resource: main-ui
       route: constellation-map
       render: native
+      resolver:
+        function: resolver
       title: Constella
 
   confluence:contentBylineItem:

@@ -43,12 +43,12 @@ export async function twg(graphqlQuery, variables) {
 // so every wrapper degrades to [] rather than throwing.
 // ---------------------------------------------------------------------------
 
-/** Teams a user belongs to. [{ ari, displayName, summary ]] */
+/** Teams a user belongs to. [{ ari, displayName, summary(from description)] */
 export async function userTeams(userId) {
-  const q = `query UserTeams($userId: ID!) {
+  const q = `query constella_userTeams($userId: ID!) {
     atlassianUserInTeams(userId: $userId, first: 25) {
-      edges { node { id
-        ... on AtlassianTeam { id displayName summary }
+      edges { node {
+        ... on AtlassianTeam { id displayName description }
       } }
       pageInfo { hasNextPage }
     }
@@ -56,29 +56,29 @@ export async function userTeams(userId) {
   const res = await twg(q, { userId });
   return extract(res, ['atlassianUserInTeams'], (edge) => {
     const n = edge.node || {};
-    return { ari: n.id, displayName: n.displayName || 'Unnamed team', summary: n.summary || '' };
+    return { ari: n.id, displayName: n.displayName || 'Unnamed team', summary: n.description || '' };
   });
 }
 
 /** Members of a team. [{ ari, displayName }] */
 export async function teamMembers(teamAri) {
-  const q = `query TeamMembers($teamAri: ID!) {
+  const q = `query constella_teamMembers($teamAri: ID!) {
     atlassianTeamMembers(teamAri: $teamAri, first: 50) {
       edges { node { id
-        ... on AtlassianUser { id displayName }
+        ... on AtlassianUser { id name }
       } }
     }
   }`;
   const res = await twg(q, { teamAri });
   return extract(res, ['atlassianTeamMembers'], (edge) => {
     const n = edge.node || {};
-    return { ari: n.id, displayName: n.displayName || 'Unknown' };
+    return { ari: n.id, displayName: n.name || 'Unknown' };
   });
 }
 
 /** Jira & Confluence spaces linked to a team. [{ ari, title, spaceType }] */
 export async function teamSpaces(teamAri) {
-  const q = `query TeamSpaces($teamAri: ID!) {
+  const q = `query constella_teamSpaces($teamAri: ID!) {
     spacesByAtlassianTeam(teamAri: $teamAri, first: 25) {
       edges { node {
         ... on JiraSpace { id title }
@@ -95,39 +95,53 @@ export async function teamSpaces(teamAri) {
 
 /** Teams linked to a space. [{ ari, displayName, summary, memberCount }] */
 export async function spaceTeams(spaceAri) {
-  const q = `query SpaceTeams($spaceAri: ID!) {
+  const q = `query constella_spaceTeams($spaceAri: ID!) {
     atlassianTeamsBySpace(spaceAri: $spaceAri, first: 25) {
       edges { node { id
-        ... on AtlassianTeam { id displayName summary }
+        __typename
+        ... on AtlassianTeam { id displayName description }
       } }
     }
   }`;
   const res = await twg(q, { spaceAri });
   return extract(res, ['atlassianTeamsBySpace'], (edge) => {
     const n = edge.node || {};
-    return { ari: n.id, displayName: n.displayName || 'Unnamed team', summary: n.summary || '' };
+    return { ari: n.id, displayName: n.displayName || 'Unnamed team', summary: n.description || '' };
   });
 }
 
 /** Creator / owners / recent contributors of a Confluence page. */
-export async function pagePeople(contentId) {
-  const q = `query PagePeople($id: ID!) {
-    creator: confluencePageCreator(id: $id) {
-      ... on AtlassianUser { id displayName }
+export async function pagePeople(contentId, cloudId) {
+  // TWG wants the fully-qualified page ARI including the site's cloudId:
+  // ari:cloud:confluence:<cloudId>:page/<id>  (see SDL objects() example).
+  const raw = String(contentId);
+  let id = raw;
+  if (!raw.startsWith('ari:')) {
+    id = cloudId
+      ? `ari:cloud:confluence:${cloudId}:page/${raw}`
+      : `ari:cloud:confluence::page/${raw}`;
+  }
+  const q = `query constella_pagePeople($id: ID!) {
+    creator: confluencePageCreator(id: $id, first: 1) {
+      edges { node { ... on AtlassianUser { id name } } }
     }
     owners: confluencePageOwners(id: $id, first: 10) {
-      edges { node { ... on AtlassianUser { id displayName } } }
+      edges { node { ... on AtlassianUser { id name } } }
     }
     contributors: confluencePageContributors(id: $id, first: 20) {
-      edges { node { ... on AtlassianUser { id displayName } } }
+      edges { node { ... on AtlassianUser { id name } } }
     }
   }`;
-  const res = await twg(q, { id: String(contentId) });
+  const res = await twg(q, { id });
   if (res.errors && res.errors.length && !res.data) return { error: describeErrors(res.errors) };
   const d = res.data || {};
-  const mapUser = (n) => (n ? { ari: n.id, displayName: n.displayName || 'Unknown' } : null);
+  const mapUser = (n) => (n ? { ari: n.id, displayName: n.name || 'Unknown' } : null);
+  const firstNode = (conn) => {
+    const edges = (conn && conn.edges) || [];
+    return edges.length ? mapUser(edges[0].node) : null;
+  };
   return {
-    creator: mapUser(d.creator),
+    creator: firstNode(d.creator),
     owners: ((d.owners && d.owners.edges) || []).map((e) => mapUser(e.node)).filter(Boolean),
     contributors: ((d.contributors && d.contributors.edges) || []).map((e) => mapUser(e.node)).filter(Boolean),
   };
@@ -135,9 +149,9 @@ export async function pagePeople(contentId) {
 
 /** What a user recently viewed or was assigned, across tools. */
 export async function userRecentWork(userId, sinceDays = 14) {
-  const q = `query UserWork($userId: ID!, $since: String!) {
+  const q = `query constella_userWork($userId: ID!, $since: String!) {
     recent: atlassianUserRecentlyViewed(userId: $userId, since: $since, first: 20) {
-      edges { node { id
+      edges { node {
         ... on ConfluencePage { id title }
         ... on JiraWorkItem { id title }
       } }
